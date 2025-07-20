@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Hostel Manager</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<style>
+  body { background: #f4f6fa; }
+  .hero {
+    background: url('https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1350&q=80')
+      center/cover no-repeat;
+    height: 180px;
+    border-radius: 0 0 20px 20px;
+    animation: fadeIn 0.8s;
+  }
+  @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+  .nav-btns .btn { flex: 1; margin: 4px; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; animation: fadeIn 0.5s; }
+  .badge-status { font-size: .85rem; padding:5px 10px; border-radius:10px; }
+  .status-complete { background:#d4edda; color:#155724; }
+  .status-partial { background:#fff3cd; color:#856404; }
+  .status-unpaid { background:#f8d7da; color:#721c24; }
+</style>
+</head>
+<body>
+  <div class="hero"></div>
+  <div class="container py-4">
+
+    <!-- LOGIN -->
+    <div id="loginSection" class="card p-4 mb-4">
+      <h4><i class="fa fa-sign-in-alt"></i> Login</h4>
+      <input id="usr" class="form-control mb-2" placeholder="Username">
+      <input id="pwd" type="password" class="form-control mb-2" placeholder="Password">
+      <div class="d-flex gap-2 mb-2">
+        <button class="btn btn-primary flex-fill" onclick="login()">Login</button>
+        <button class="btn btn-secondary flex-fill" onclick="register()">Register</button>
+      </div>
+      <p id="msg" class="text-danger"></p>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="app" style="display:none;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="nav-btns d-flex flex-wrap w-100">
+          <button class="btn btn-outline-primary" onclick="showTab('dashboardTab')"><i class="fa fa-home"></i> Dashboard</button>
+          <button class="btn btn-outline-primary" onclick="showTab('hostelTab')"><i class="fa fa-building"></i> Hostels</button>
+          <button class="btn btn-outline-primary" onclick="showTab('hostelerTab')"><i class="fa fa-users"></i> Hostelers</button>
+          <button class="btn btn-outline-primary" onclick="showTab('reportsTab')"><i class="fa fa-chart-line"></i> Reports</button>
+          <button id="adminBtn" class="btn btn-outline-danger d-none" onclick="showTab('adminTab')"><i class="fa fa-user-shield"></i> Admin</button>
+        </div>
+        <button class="btn btn-outline-dark ms-2" onclick="logout()">Logout</button>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="dashboardTab" class="tab-pane card p-3 active">
+        <h5>📊 Overview</h5>
+        <div id="overview" class="row text-center mt-3"></div>
+      </div>
+
+      <!-- HOSTELS -->
+      <div id="hostelTab" class="tab-pane card p-3">
+        <h5>🏢 Manage Hostels</h5>
+        <div class="input-group mb-3">
+          <input id="newHostel" class="form-control" placeholder="New Hostel Name">
+          <button class="btn btn-success" onclick="addHostel()">Add</button>
+        </div>
+        <ul id="hostelList" class="list-group"></ul>
+      </div>
+
+      <!-- HOSTELERS -->
+      <div id="hostelerTab" class="tab-pane card p-3">
+        <h5>🧑‍🎓 Manage Hostelers</h5>
+        <div class="mb-2 d-flex gap-2 flex-wrap">
+          <select id="selHostel" class="form-select flex-fill"></select>
+          <input id="searchName" class="form-control flex-fill" placeholder="Search by Name">
+          <select id="filterStatus" class="form-select" style="max-width:150px">
+            <option value="">All Status</option>
+            <option value="Completed">Paid</option>
+            <option value="Partial">Partial</option>
+            <option value="Unpaid">Unpaid</option>
+          </select>
+          <button class="btn btn-outline-secondary" onclick="renderHostelers()">🔍 Filter</button>
+        </div>
+
+        <!-- Improved Input Form -->
+        <div class="row g-2 mb-3">
+          <div class="col-md-3">
+            <label class="form-label">Name</label>
+            <input id="hName" class="form-control" placeholder="Name">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Phone</label>
+            <input id="hPhone" type="number" class="form-control" placeholder="Phone">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Room No</label>
+            <input id="hRoom" type="number" class="form-control" placeholder="Room No">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Monthly Fee</label>
+            <input id="hFee" type="number" class="form-control" placeholder="Fee">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Initial Paid</label>
+            <input id="hPaid" type="number" class="form-control" placeholder="Paid">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Join Date</label>
+            <input id="hJoin" type="date" class="form-control">
+          </div>
+          <div class="col-md-9">
+            <label class="form-label">Remarks</label>
+            <input id="hRemark" class="form-control" placeholder="Remarks">
+          </div>
+        </div>
+
+        <button class="btn btn-success mb-3" onclick="addHosteler()">➕ Add Hosteler</button>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped">
+            <thead><tr>
+              <th>#</th><th>Name</th><th>Phone</th><th>Room</th><th>Fee</th>
+              <th>Paid</th><th>Status</th><th>Join Date</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="hostelerTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div id="reportsTab" class="tab-pane card p-3">
+        <h5>📁 Reports</h5>
+        <div class="d-flex gap-2 mb-3 flex-wrap">
+          <select id="rHostel" class="form-select"><option value="">Select Hostel</option></select>
+          <select id="rMonth" class="form-select"><option value="">All Months</option></select>
+          <select id="rYear" class="form-select"><option value="">All Years</option></select>
+          <select id="rStatus" class="form-select">
+            <option value="">All Status</option>
+            <option value="Completed">Paid</option>
+            <option value="Partial">Partial</option>
+            <option value="Unpaid">Unpaid</option>
+          </select>
+          <button class="btn btn-info" onclick="exportCSV()">Download CSV</button>
+        </div>
+      </div>
+
+      <!-- ADMIN -->
+      <div id="adminTab" class="tab-pane card p-3">
+        <h5>👑 Approve or Decline Users</h5>
+        <div id="userApprovals"></div>
+      </div>
+
+    </div>
+  </div>
+
+
+<script>
+const MIN_YEAR = 2024;
+const MONTH = new Date().toISOString().slice(0,7);
+
+let users = JSON.parse(localStorage.getItem('users') || '{}');
+if (!localStorage.getItem('adminInit')) {
+  users['vasudev'] = { pwd: 'admin123', approved: true, admin: true };
+  localStorage.setItem('users', JSON.stringify(users));
+  localStorage.setItem('adminInit', '1');
+}
+
+let data = JSON.parse(localStorage.getItem('data') || '{}');
+function saveData(){ localStorage.setItem('data', JSON.stringify(data)); }
+function saveUsers(){ localStorage.setItem('users', JSON.stringify(users)); }
+
+// Auth
+function login() {
+  msg.textContent = '';
+  const u = usr.value.trim(), p = pwd.value;
+  if (!users[u]) return msg.textContent = 'User not found';
+  if (users[u].pwd !== p) return msg.textContent = 'Wrong password';
+  if (!users[u].approved) return msg.textContent = 'Awaiting approval';
+  sessionStorage.user = u;
+  init();
+}
+function register() {
+  msg.textContent = '';
+  const u = usr.value.trim(), p = pwd.value;
+  if (!u || !p) return msg.textContent = 'Fill all';
+  if (users[u]) return msg.textContent = 'Username exists';
+  users[u] = { pwd: p, approved: false, admin: false };
+  saveUsers();
+  msg.textContent = 'Registered – awaiting approval';
+}
+function logout(){
+  sessionStorage.removeItem('user');
+  location.reload();
+}
+
+// Initialization
+function init(){
+  loginSection.style.display = 'none';
+  app.style.display = 'block';
+  adminBtn.classList.toggle('d-none', !users[sessionStorage.user].admin);
+  if (!data[sessionStorage.user]) data[sessionStorage.user] = { hostels: {} };
+  saveData();
+
+  loadHostels();
+  setupReportFilters();
+  showTab('dashboardTab');
+}
+
+// Tab navigation
+function showTab(id){
+  ['dashboardTab','hostelTab','hostelerTab','reportsTab','adminTab']
+    .forEach(t => document.getElementById(t).classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+
+  if (id === 'dashboardTab') renderOverview();
+  if (id === 'hostelerTab') renderHostelers();
+  if (id === 'adminTab') loadApprovals();
+}
+
+// Hostel CRUD
+function addHostel(){
+  const nm = newHostel.value.trim();
+  if (!nm) return alert('Enter hostel name');
+  if (data[sessionStorage.user].hostels[nm]) return alert('Exists');
+  data[sessionStorage.user].hostels[nm] = { hostelers: [] };
+  saveData();
+  newHostel.value = '';
+  loadHostels();
+}
+function loadHostels(){
+  hostelList.innerHTML = '';
+  selHostel.innerHTML = '';
+  rHostel.innerHTML = '<option value="">Select Hostel</option>';
+
+  const hObjs = data[sessionStorage.user].hostels;
+  Object.keys(hObjs).forEach(h => {
+    hostelList.innerHTML += `
+      <li class="list-group-item d-flex justify-content-between">
+        ${h}
+        <div>
+          <button class="btn btn-sm btn-warning" onclick="renameHostel('${h}')">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="removeHostel('${h}')">🗑️</button>
+        </div>
+      </li>`;
+    selHostel.innerHTML += `<option>${h}</option>`;
+    rHostel.innerHTML += `<option>${h}</option>`;
+  });
+}
+function renameHostel(oldName){
+  const nn = prompt('Rename', oldName);
+  if (!nn || nn === oldName || data[sessionStorage.user].hostels[nn]) return;
+  const o = data[sessionStorage.user].hostels;
+  o[nn] = o[oldName];
+  delete o[oldName];
+  saveData();
+  loadHostels();
+}
+function removeHostel(h){
+  if (confirm('Delete hostel?')) {
+    delete data[sessionStorage.user].hostels[h];
+    saveData();
+    loadHostels();
+  }
+}
+
+// Hosteler CRUD & filtering
+function addHosteler(){
+  const host = selHostel.value;
+  const arr = data[sessionStorage.user].hostels[host].hostelers;
+
+  const nm = hName.value.trim();
+  const ph = hPhone.value.trim();
+  const rm = hRoom.value.trim();
+  const fee = +hFee.value;
+  const paid = +hPaid.value;
+  const join = hJoin.value;
+  const rmk = hRemark.value.trim();
+
+  if (!nm || !ph || !rm || !fee || !join) return alert('Complete fields');
+  if (arr.some(x => x.name.toLowerCase() === nm.toLowerCase())) return alert('Name exists');
+
+  const obj = { name: nm, phone: ph, room: rm, fee, join, remark: rmk, payments: [] };
+  if (paid > 0) obj.payments.push({ amt: paid, date: join });
+  arr.push(obj);
+  saveData();
+  clearForm();
+  renderHostelers();
+}
+function clearForm(){
+  ['hName','hPhone','hRoom','hFee','hPaid','hJoin','hRemark']
+    .forEach(id => document.getElementById(id).value = '');
+}
+function renderHostelers(){
+  const arr = data[sessionStorage.user].hostels[selHostel.value]?.hostelers || [];
+  const nameFilter = searchName.value.trim().toLowerCase();
+  const statusFilter = filterStatus.value;
+  hostelerTable.innerHTML = '';
+
+  arr.forEach((x, i) => {
+    if (nameFilter && !x.name.toLowerCase().includes(nameFilter)) return;
+    const total = x.payments.reduce((s, p) => s + p.amt, 0);
+    const status = total >= x.fee ? 'Completed' : total > 0 ? 'Partial' : 'Unpaid';
+    if (statusFilter && status !== statusFilter) return;
+
+    const cls = status === 'Completed' ? 'status-complete' :
+                status === 'Partial' ? 'status-partial' :
+                'status-unpaid';
+
+    hostelerTable.innerHTML += `
+      <tr>
+        <td>${i+1}</td>
+        <td><a href="#" onclick="viewHosteler(${i})">${x.name}</a></td>
+        <td>${x.phone}</td>
+        <td>${x.room}</td>
+        <td>${x.fee}</td>
+        <td>${total}</td>
+        <td><span class="badge-status ${cls}">${status}</span></td>
+        <td>${x.join}</td>
+        <td>
+          ${status !== 'Completed' ? `<button class="btn btn-sm btn-success me-1" onclick="addPayment(${i})">💵</button>` : ''}
+          <button class="btn btn-sm btn-danger" onclick="deleteHosteler(${i})">🗑️</button>
+        </td>
+      </tr>`;
+  });
+}
+function addPayment(i){
+  const x = data[sessionStorage.user].hostels[selHostel.value].hostelers[i];
+  const total = x.payments.reduce((s, p) => s + p.amt, 0);
+  const due = x.fee - total;
+  const amt = +prompt(`Enter amount (due ₹${due})`);
+  if (!amt || amt < 1 || amt > due) return alert('Invalid amount');
+  x.payments.push({ amt, date: new Date().toISOString().slice(0,10) });
+  saveData();
+  renderHostelers();
+}
+function deleteHosteler(i){
+  if (confirm('Remove hosteler?')) {
+    data[sessionStorage.user].hostels[selHostel.value].hostelers.splice(i,1);
+    saveData();
+    renderHostelers();
+  }
+}
+function viewHosteler(i){
+  const x = data[sessionStorage.user].hostels[selHostel.value].hostelers[i];
+  let msg = `Name: ${x.name}\nPhone: ${x.phone}\nRoom: ${x.room}\nFee: ₹${x.fee}\nJoin: ${x.join}\nRemarks: ${x.remark}\n\nPayments:\n`;
+  x.payments.forEach(p => msg += `₹${p.amt} on ${p.date}\n`);
+  alert(msg);
+}
+
+// Dashboard overview
+function renderOverview(){
+  let totalFee=0, totalPaid=0, counts={ Completed:0, Partial:0, Unpaid:0 };
+  const userData = data[sessionStorage.user].hostels;
+
+  Object.values(userData).forEach(h => {
+    h.hostelers.forEach(x => {
+      totalFee += x.fee;
+      const paid = x.payments.reduce((s, p) => s + p.amt, 0);
+      totalPaid += paid;
+      const st = paid >= x.fee ? 'Completed' : paid > 0 ? 'Partial' : 'Unpaid';
+      counts[st]++;
+    });
+  });
+
+  overview.innerHTML = `
+    <div class="col fw-bold">Total Fee:<br>₹${totalFee}</div>
+    <div class="col fw-bold">Collected:<br>₹${totalPaid}</div>
+    <div class="col fw-bold">✅${counts.Completed} ⚠️${counts.Partial} ❌${counts.Unpaid}</div>`;
+}
+
+// Admin approval
+function loadApprovals(){
+  userApprovals.innerHTML = '';
+  Object.entries(users)
+    .filter(([k, v]) => !v.approved)
+    .forEach(([u]) => {
+      userApprovals.innerHTML += `
+        <div class="mb-2">
+          ${u}
+          <button class="btn btn-sm btn-success me-1" onclick="approveUser('${u}')">Approve</button>
+          <button class="btn btn-sm btn-danger" onclick="declineUser('${u}')">Decline</button>
+        </div>`;
+    });
+}
+function approveUser(u){ users[u].approved = true; saveUsers(); loadApprovals(); }
+function declineUser(u){ delete users[u]; saveUsers(); loadApprovals(); }
+
+// Report filters setup
+function setupReportFilters(){
+  const now = new Date(), thisYear = now.getFullYear();
+  rHostel.innerHTML = '<option value="">Select Hostel</option>';
+  rYear.innerHTML = '<option value="">All Years</option>';
+  rMonth.innerHTML = '<option value="">All Months</option>';
+
+  for (let y = thisYear; y >= MIN_YEAR; y--) rYear.innerHTML += `<option>${y}</option>`;
+  for (let m = 1; m <= 12; m++) {
+    const mm = String(m).padStart(2, '0');
+    rMonth.innerHTML += `<option value="${mm}">${mm}</option>`;
+  }
+}
+
+// CSV export
+function exportCSV(){
+  const h = rHostel.value;
+  const m = rMonth.value;
+  const y = rYear.value;
+  const stf = rStatus.value;
+  if (!h) return alert('Select hostel');
+
+  let rows = [['Name','Phone','Room','Fee','Paid','Payments']];
+  let recs = 0;
+
+  data[sessionStorage.user].hostels[h].hostelers.forEach(x => {
+    const flt = x.payments.filter(p => {
+      return (!m || p.date.match(`-(${m})-`)) &&
+             (!y || p.date.startsWith(`${y}-`));
+    });
+    const paid = flt.reduce((s, p) => s + p.amt, 0);
+    const st = paid >= x.fee ? 'Completed' : paid > 0 ? 'Partial' : 'Unpaid';
+    if (stf && st !== stf) return;
+
+    const hist = flt.map(p => `${p.amt} on ${p.date}`).join(' | ');
+    rows.push([x.name, x.phone, x.room, x.fee, paid, hist]);
+    recs++;
+  });
+
+  if (recs === 0) rows.push(['No records','','','','','']);
+
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  const tag = h + (y ? `_${y}` : '') + (m ? `_${m}` : '');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${tag}_${MONTH}.csv`;
+  a.click();
+}
+
+// Auto-init if already logged in
+if (sessionStorage.user) init();
+</script>
+</body>
+</html>
